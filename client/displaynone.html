@@ -1,0 +1,69 @@
+<!doctype html>
+<html>
+	<head>
+		<title>Test #3</title>
+		<link rel="stylesheet" href="style.css" type="text/css" />
+	</head>
+	<body>
+
+
+		<form id='form' class='large'>
+			<span class='desc'>Do it fast.</span>
+			<br/><br/>
+			<img src="calculator.jpg" />
+			<br/><br/>
+			<span class='desc'>你有 1 秒的時間計算並送出答案</span>
+			<br/><br/>
+
+
+			<span class='question' id='question'></span>
+			<input type='text' class='answer' id='answer' name='answer' size='5' autocomplete="off"/>
+			<input type='submit' class='submit' id='submit' value='Send'/>
+			<br/><br/>
+			<span class='desc' id='response'>&nbsp;</span>
+
+		</form>
+
+
+		<script src='ga.js'></script>
+		<script src="/socket.io/socket.io.js"></script>
+		<script>
+			(function(){
+				var answer = document.getElementById('answer');
+				answer.focus();
+
+				var question = document.getElementById('question');
+				question.innerHTML = 'waiting'
+
+				var q = ['','','','='];
+				var n = 0
+
+
+				/*
+					問題與答案是每秒在伺服器隨機生成
+					以下的 code 沒有什麼玄機，請確實在一秒內計算並送出答案吧
+				*/
+				var socket = io();
+				socket.on('question',function(num){
+					n = parseInt(num,10);
+					q[0] = n & 0xff;
+					q[1] = '+-*'[(n>>8)%3];
+					q[2] = n>>10 & 0xff;
+					question.innerHTML = q.join(' ');
+				})
+				socket.on('answered',function(rs){
+					if(rs.correct) window.location.href=rs.url;
+					else document.getElementById('response').innerHTML = rs.ans+': Wrong'
+				})
+				document.getElementById('form').onsubmit=function(){
+					answer.select();
+					socket.emit('answer',answer.value);
+					return false;
+				}
+
+			})()
+		</script>
+
+
+	</body>
+</html>
